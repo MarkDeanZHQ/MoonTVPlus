@@ -1059,9 +1059,9 @@ function PlayPageClient() {
   };
 
   // 清理播放器资源的统一函数
-  const cleanupPlayer = () => {
+  const cleanupPlayer = async () => {
     // 先清理Anime4K，避免GPU纹理错误
-    cleanupAnime4K();
+    await cleanupAnime4K();
 
     if (artPlayerRef.current) {
       try {
@@ -1122,8 +1122,10 @@ function PlayPageClient() {
 
     try {
       if (anime4kRef.current) {
-        anime4kRef.current.stop?.();
+        anime4kRef.current.controller?.stop?.();
         anime4kRef.current = null;
+        // 等待旧实例完全停止，避免双重渲染
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
 
       const video = artPlayerRef.current.video as HTMLVideoElement;
@@ -2925,20 +2927,21 @@ function PlayPageClient() {
     }
 
     // WebKit浏览器或首次创建：销毁之前的播放器实例并创建新的
-    if (artPlayerRef.current) {
-      cleanupPlayer();
-    }
-
     // 异步初始化播放器
     const initPlayer = async () => {
       try {
+        // 先清理旧播放器实例
+        if (artPlayerRef.current) {
+          await cleanupPlayer();
+        }
+
         // iOS需要等待DOM完全清理
         await new Promise(resolve => setTimeout(resolve, 100));
 
         // 双重检查：如果旧播放器仍然存在，再次清理
         if (artPlayerRef.current) {
           console.warn('旧播放器仍存在，再次清理');
-          cleanupPlayer();
+          await cleanupPlayer();
           await new Promise(resolve => setTimeout(resolve, 100));
         }
 
