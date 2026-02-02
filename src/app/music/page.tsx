@@ -166,14 +166,9 @@ export default function MusicPage() {
   useEffect(() => {
     const initializePlayState = async () => {
       try {
-        console.log('=== 开始同步加载数据库记录 ===');
-
         // 1. 直接从 API 同步加载播放记录（阻塞等待，不使用缓存）
         const response = await fetch('/api/music/playrecords');
         const dbRecords = await response.json();
-
-        console.log('=== 数据库原始数据 ===');
-        console.log('dbRecords:', dbRecords);
 
         // 将数据库记录转换为前端格式
         const records: PlayRecord[] = [];
@@ -181,7 +176,6 @@ export default function MusicPage() {
 
         Object.entries(dbRecords).forEach(([key, record]) => {
           const dbRecord = record as DbRecord;
-          console.log('处理记录:', key, dbRecord);
           records.push({
             platform: dbRecord.platform,
             id: dbRecord.id,
@@ -232,11 +226,6 @@ export default function MusicPage() {
           const latestDbRecord = sortedRecords[0];
           const latestDbSong = sortedSongs[0];
 
-          console.log('=== 从数据库加载歌曲 ===');
-          console.log('数据库最新歌曲:', latestDbSong);
-          console.log('数据库播放进度:', latestDbRecord.playTime);
-          console.log('数据库保存时间:', new Date(latestDbRecord.timestamp).toLocaleString());
-
           // 使用数据库的歌曲信息
           setCurrentSong(latestDbSong);
           setPlaylistIndex(0);
@@ -264,8 +253,6 @@ export default function MusicPage() {
 
           const data = await parseResponse.json();
 
-          console.log('解析结果:', data);
-
           if (data.code === 0 && data.data?.data && data.data.data.length > 0) {
             const songData = data.data.data[0];
 
@@ -282,9 +269,6 @@ export default function MusicPage() {
                 setLyrics(parsedLyrics);
               }
 
-              console.log('设置音频源:', playUrl);
-              console.log('恢复播放进度:', dbPlayTime);
-
               // 6. 等待所有数据准备好后，再设置音频源和进度
               if (audioRef.current) {
                 audioRef.current.src = playUrl;
@@ -292,7 +276,6 @@ export default function MusicPage() {
                 const restoreTime = () => {
                   if (audioRef.current && dbPlayTime > 0) {
                     audioRef.current.currentTime = dbPlayTime;
-                    console.log('播放进度已恢复:', audioRef.current.currentTime);
                   }
                 };
 
@@ -506,7 +489,6 @@ export default function MusicPage() {
 
       // 5. 直接播放第一首歌
       if (userPlaylistSongs.length > 0) {
-        console.log('播放全部: 准备播放第一首歌', userPlaylistSongs[0]);
         setPlaylistIndex(0);
         await playSong(userPlaylistSongs[0], 0);
       }
@@ -653,7 +635,6 @@ export default function MusicPage() {
 
   // 播放歌曲
   const playSong = async (song: Song, index: number) => {
-    console.log('playSong 被调用:', song, 'index:', index);
     try {
       // 使用歌曲自己的平台信息，如果没有则使用当前选择的平台
       const platform = song.platform || currentSource;
@@ -666,8 +647,6 @@ export default function MusicPage() {
       setCurrentSongIndex(index);
       setShowPlayer(true);
       setLyrics([]); // 清空旧歌词
-
-      console.log('已设置 showPlayer=true, currentSong=', song);
 
       // 添加到播放记录和播放列表
       const record: PlayRecord = {
@@ -1526,7 +1505,6 @@ export default function MusicPage() {
       </main>
 
       {/* Player */}
-      {console.log('渲染检查: showPlayer=', showPlayer, 'currentSong=', currentSong)}
       {showPlayer && currentSong && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[95%] max-w-3xl z-50">
           <div className="bg-zinc-900/95 backdrop-blur-md rounded-xl p-4 border border-white/10 shadow-2xl">
